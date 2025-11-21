@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Go 언어로 REST API 만들기",
+    "content": "Go 언어는 간결하고 빠른 성능을 자랑합니다. 이번 글에서는 Gin 프레임워크를 사용하여 간단한 REST API를 만드는 방법을 알아봅니다. HTTP 라우팅, 미들웨어 설정, JSON 응답 처리 등 기본적인 내용을 다룹니다.",
+    "author": "김개발",
+    "published_date": "2024-11-01T00:00:00Z",
+    "url": "https://example.com/go-rest-api",
+    "tags": ["Go", "Backend", "API", "Gin"]
+  },
+  {
+    "title": "Elasticsearch 한글 검색 최적화하기",
+    "content": "Elasticsearch에서 한글 검색을 구현할 때 Nori 형태소 분석기를 사용하면 검색 품질을 크게 향상시킬 수 있습니다. 이 글에서는 Nori 설치 방법과 인덱스 설정, 그리고 실제 검색 쿼리 예제를 살펴봅니다.",
+    "author": "박검색",
+    "published_date": "2024-10-28T00:00:00Z",
+    "url": "https://example.com/elasticsearch-korean",
+    "tags": ["Elasticsearch", "검색", "Nori", "한글"]
+  },
+  {
+    "title": "Docker로 개발 환경 구성하기",
+    "content": "Docker를 사용하면 팀원 모두가 동일한 개발 환경에서 작업할 수 있습니다. Docker Compose를 활용한 멀티 컨테이너 구성, 볼륨 마운트, 네트워크 설정 등 실무에서 자주 사용하는 패턴을 소개합니다.",
+    "author": "이도커",
+    "published_date": "2024-10-25T00:00:00Z",
+    "url": "https://example.com/docker-dev-env",
+    "tags": ["Docker", "DevOps", "컨테이너"]
+  },
+  {
+    "title": "한글 형태소 분석의 모든 것",
+    "content": "한글 자연어 처리에서 형태소 분석은 매우 중요한 전처리 단계입니다. KoNLPy, Mecab, Nori 등 다양한 형태소 분석기를 비교하고, 각각의 특징과 사용 사례를 살펴봅니다. 검색 엔진 구축 시 어떤 분석기를 선택해야 할까요?",
+    "author": "최언어",
+    "published_date": "2024-10-20T00:00:00Z",
+    "url": "https://example.com/korean-morphology",
+    "tags": ["NLP", "한글", "형태소분석", "검색"]
+  },
+  {
+    "title": "RESTful API 설계 원칙",
+    "content": "좋은 REST API 설계는 직관적이고 일관성 있어야 합니다. 리소스 중심의 URL 설계, HTTP 메서드의 올바른 사용, 상태 코드 활용, 버전 관리 전략 등 실무에서 꼭 알아야 할 REST API 설계 원칙을 정리합니다.",
+    "author": "정아키텍트",
+    "published_date": "2024-10-15T00:00:00Z",
+    "url": "https://example.com/restful-design",
+    "tags": ["REST", "API", "설계", "Backend"]
+  },
+  {
+    "title": "Go 언어 동시성 프로그래밍",
+    "content": "Go의 가장 큰 특징 중 하나는 고루틴과 채널을 사용한 동시성 프로그래밍입니다. 고루틴의 작동 원리, 채널을 통한 통신, select 문 활용, 그리고 실제 프로젝트에서의 활용 예제를 다룹니다.",
+    "author": "김고루틴",
+    "published_date": "2024-10-10T00:00:00Z",
+    "url": "https://example.com/go-concurrency",
+    "tags": ["Go", "동시성", "고루틴", "채널"]
+  },
+  {
+    "title": "검색 엔진의 랭킹 알고리즘",
+    "content": "검색 결과의 순서는 어떻게 결정될까요? TF-IDF, BM25 같은 전통적인 랭킹 알고리즘부터 최신 딥러닝 기반 랭킹 모델까지 검색 엔진의 핵심 기술을 알아봅니다. Elasticsearch의 스코어링 방식도 함께 살펴봅니다.",
+    "author": "박알고리즘",
+    "published_date": "2024-10-05T00:00:00Z",
+    "url": "https://example.com/search-ranking",
+    "tags": ["검색", "알고리즘", "랭킹", "Elasticsearch"]
+  },
+  {
+    "title": "마이크로서비스 아키텍처 입문",
+    "content": "모놀리식 애플리케이션에서 마이크로서비스로 전환하기. 서비스 분리 전략, API 게이트웨이, 서비스 디스커버리, 분산 트랜잭션 처리 등 마이크로서비스 아키텍처의 핵심 개념과 실제 구현 방법을 다룹니다.",
+    "author": "이아키",
+    "published_date": "2024-09-30T00:00:00Z",
+    "url": "https://example.com/microservices-intro",
+    "tags": ["마이크로서비스", "아키텍처", "Backend", "분산시스템"]
+  },
+  {
+    "title": "효율적인 데이터베이스 인덱싱",
+    "content": "데이터베이스 성능 최적화의 핵심은 인덱스입니다. B-Tree 인덱스, 해시 인덱스, 복합 인덱스의 원리와 사용 시나리오를 이해하고, 쿼리 실행 계획 분석을 통해 인덱스 효과를 검증하는 방법을 알아봅니다.",
+    "author": "최데이터",
+    "published_date": "2024-09-25T00:00:00Z",
+    "url": "https://example.com/database-indexing",
+    "tags": ["데이터베이스", "인덱스", "성능최적화", "SQL"]
+  },
+  {
+    "title": "GitHub Actions로 CI/CD 구축하기",
+    "content": "GitHub Actions를 활용하면 별도의 CI/CD 서버 없이도 자동화된 배포 파이프라인을 구축할 수 있습니다. 워크플로우 작성법, 시크릿 관리, 다양한 액션 활용, 그리고 실제 프로젝트에 적용하는 과정을 단계별로 설명합니다.",
+    "author": "정자동화",
+    "published_date": "2024-09-20T00:00:00Z",
+    "url": "https://example.com/github-actions-cicd",
+    "tags": ["CI/CD", "GitHub", "자동화", "DevOps"]
+  }
+]
