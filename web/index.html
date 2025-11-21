@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSearch - 한국어 IT 검색엔진</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">🔍 SmartSearch</h1>
+            <p class="subtitle">한국어 IT 콘텐츠 통합 검색엔진</p>
+            <p class="feature-info">✨ 오타/한영/초성 자동 인식</p>
+        </header>
+
+        <main>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="검색어를 입력하세요"
+                    autocomplete="off">
+                <button id="searchBtn">검색</button>
+            </div>
+
+            <div id="autocomplete" class="autocomplete-dropdown"></div>
+
+            <div id="searchInfo" class="search-info" style="display: none;"></div>
+
+            <div id="loading" class="loading" style="display: none;">
+                검색 중...
+            </div>
+
+            <div id="results" class="results"></div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
