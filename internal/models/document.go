@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// Document represents a tech blog article
+// Document는 기술 블로그 글을 나타낸다.
 type Document struct {
 	Title         string    `json:"title"`
 	Content       string    `json:"content"`
