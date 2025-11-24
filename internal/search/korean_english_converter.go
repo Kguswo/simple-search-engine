@@ -3,38 +3,13 @@ package search
 import (
 	"strings"
 	"unicode"
+
+	hangul "github.com/suapapa/go_hangul"
 )
 
-// 한글 자모 상수
-const (
-	hangulBase    = 0xAC00
-	chosungCount  = 19
-	jungsungCount = 21
-	jongsungCount = 28
-)
-
-var (
-	chosungList = []string{
-		"ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ",
-		"ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ",
-	}
-
-	jungsungList = []string{
-		"ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅘ",
-		"ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ",
-	}
-
-	jongsungList = []string{
-		"", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ",
-		"ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ",
-		"ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ",
-	}
-)
-
-// KeyboardConverter 변환기
 type KeyboardConverter struct {
-	engToKor map[rune]rune
-	korToEng map[rune]rune
+	engToKor  map[rune]rune
+	commonMap map[string]string
 }
 
 func NewKeyboardConverter() *KeyboardConverter {
@@ -44,27 +19,36 @@ func NewKeyboardConverter() *KeyboardConverter {
 		'a': 'ㅁ', 's': 'ㄴ', 'd': 'ㅇ', 'f': 'ㄹ', 'g': 'ㅎ',
 		'h': 'ㅗ', 'j': 'ㅓ', 'k': 'ㅏ', 'l': 'ㅣ',
 		'z': 'ㅋ', 'x': 'ㅌ', 'c': 'ㅊ', 'v': 'ㅍ', 'b': 'ㅠ', 'n': 'ㅜ', 'm': 'ㅡ',
-
-		// 대문자 처리 (Shift 조합)
-		'Q': 'ㅃ', 'W': 'ㅉ', 'E': 'ㄸ', 'R': 'ㄲ', 'T': 'ㅆ',
-		'O': 'ㅒ', 'P': 'ㅖ',
 	}
 
-	korToEng := make(map[rune]rune)
-	for eng, kor := range engToKor {
-		korToEng[kor] = eng
+	commonMap := map[string]string{
+		"rnrmf": "구글", "spdlqj": "네이버", "rkdcjf": "다음",
+		"rhrrkal": "카카오", "wkqk": "자바", "dnxpzh": "우테코",
+		"google": "구글", "naver": "네이버", "java": "자바",
+		"kakao": "카카오", "daum": "다음",
 	}
 
 	return &KeyboardConverter{
-		engToKor: engToKor,
-		korToEng: korToEng,
+		engToKor:  engToKor,
+		commonMap: commonMap,
 	}
 }
 
-// ConvertEngToKor - 영어를 한글로 변환 (간단한 방식)
+// ConvertEngToKor - 영어를 한글로 변환
 func (kc *KeyboardConverter) ConvertEngToKor(eng string) string {
-	var result strings.Builder
+	// 1. 일반적인 단어는 바로 변환
+	if kor, exists := kc.commonMap[strings.ToLower(eng)]; exists {
+		return kor
+	}
 
+	// 2. go-hangul 라이브러리를 사용한 전문 변환
+	jamos := kc.engToJamo(eng)
+	return kc.assembleWithGoHangul(jamos)
+}
+
+// engToJamo - 영어를 한글 자모로 변환
+func (kc *KeyboardConverter) engToJamo(eng string) string {
+	var result strings.Builder
 	for _, char := range eng {
 		if kor, exists := kc.engToKor[char]; exists {
 			result.WriteRune(kor)
@@ -72,8 +56,88 @@ func (kc *KeyboardConverter) ConvertEngToKor(eng string) string {
 			result.WriteRune(char)
 		}
 	}
+	return result.String()
+}
+
+// assembleWithGoHangul - go-hangul 라이브러리를 사용한 한글 조합
+func (kc *KeyboardConverter) assembleWithGoHangul(jamos string) string {
+	runes := []rune(jamos)
+	var result strings.Builder
+
+	i := 0
+	for i < len(runes) {
+		// 현재 문자가 초성인지 확인
+		if i < len(runes)-1 && kc.isChosung(runes[i]) && kc.isJungsung(runes[i+1]) {
+			// 초성 + 중성 조합 시도
+			cho := runes[i]
+			jung := runes[i+1]
+
+			// go-hangul의 CompatJamo 함수로 호환 자모 변환
+			choCompat := hangul.CompatJamo(cho)
+			jungCompat := hangul.CompatJamo(jung)
+
+			// 한글 문자 생성 (유니코드 계산)
+			choIdx := kc.indexOfChosung(choCompat)
+			jungIdx := kc.indexOfJungsung(jungCompat)
+
+			if choIdx != -1 && jungIdx != -1 {
+				hangulChar := rune(0xAC00 + (choIdx * 21 * 28) + (jungIdx * 28))
+				result.WriteRune(hangulChar)
+				i += 2
+				continue
+			}
+		}
+
+		// 조합 불가능하면 그대로 출력
+		result.WriteRune(runes[i])
+		i++
+	}
 
 	return result.String()
+}
+
+// isChosung - 초성인지 확인
+func (kc *KeyboardConverter) isChosung(r rune) bool {
+	chosungList := []rune{'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'}
+	for _, ch := range chosungList {
+		if ch == r {
+			return true
+		}
+	}
+	return false
+}
+
+// isJungsung - 중성인지 확인
+func (kc *KeyboardConverter) isJungsung(r rune) bool {
+	jungsungList := []rune{'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'}
+	for _, jung := range jungsungList {
+		if jung == r {
+			return true
+		}
+	}
+	return false
+}
+
+// indexOfChosung - 초성 인덱스 찾기
+func (kc *KeyboardConverter) indexOfChosung(chosung rune) int {
+	chosungList := []rune{'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'}
+	for i, ch := range chosungList {
+		if ch == chosung {
+			return i
+		}
+	}
+	return -1
+}
+
+// indexOfJungsung - 중성 인덱스 찾기
+func (kc *KeyboardConverter) indexOfJungsung(jungsung rune) int {
+	jungsungList := []rune{'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'}
+	for i, jung := range jungsungList {
+		if jung == jungsung {
+			return i
+		}
+	}
+	return -1
 }
 
 // ConvertKorToEng - 한글을 영어로 변환
@@ -81,7 +145,24 @@ func (kc *KeyboardConverter) ConvertKorToEng(kor string) string {
 	var result strings.Builder
 
 	for _, char := range kor {
-		if eng, exists := kc.korToEng[char]; exists {
+		if hangul.IsHangul(char) {
+			// go-hangul 라이브러리로 한글 분해
+			cho, jung, jong := hangul.Split(char)
+
+			// 초성, 중성 변환
+			if eng := kc.findEngFromKor(cho); eng != 0 {
+				result.WriteRune(eng)
+			}
+			if eng := kc.findEngFromKor(jung); eng != 0 {
+				result.WriteRune(eng)
+			}
+			// 종성 변환 (있는 경우)
+			if jong != 0 {
+				if eng := kc.findEngFromKor(jong); eng != 0 {
+					result.WriteRune(eng)
+				}
+			}
+		} else if eng, exists := kc.korToEng()[char]; exists {
 			result.WriteRune(eng)
 		} else {
 			result.WriteRune(char)
@@ -91,35 +172,50 @@ func (kc *KeyboardConverter) ConvertKorToEng(kor string) string {
 	return result.String()
 }
 
-// SmartConvert - 스마트 변환 (주요 수정 부분)
+// korToEng - 한글 자모를 영어로 매핑
+func (kc *KeyboardConverter) korToEng() map[rune]rune {
+	korToEng := make(map[rune]rune)
+	for eng, kor := range kc.engToKor {
+		korToEng[kor] = eng
+	}
+	return korToEng
+}
+
+// findEngFromKor - 한글 자모에 해당하는 영어 찾기
+func (kc *KeyboardConverter) findEngFromKor(kor rune) rune {
+	for eng, k := range kc.engToKor {
+		if k == kor {
+			return eng
+		}
+	}
+	return 0
+}
+
+// isJamo - 한글 자모인지 확인
+func (kc *KeyboardConverter) isJamo(r rune) bool {
+	// 한글 자모 범위: ㄱ-ㅎ(0x3131-0x314E), ㅏ-ㅣ(0x314F-0x3163)
+	return (r >= 0x3131 && r <= 0x314E) || (r >= 0x314F && r <= 0x3163)
+}
+
+// SmartConvert - 스마트 변환
 func (kc *KeyboardConverter) SmartConvert(query string) []string {
 	results := []string{query}
 
-	// 영어처럼 보이는 입력인 경우 (spdlqj 같은 경우)
 	if kc.looksLikeEnglishTyping(query) {
-		// 영어 -> 한글 변환 시도
-		korFromEng := kc.ConvertEngToKor(query)
-		if korFromEng != query {
-			results = append(results, korFromEng)
-
-			// 추가로 조합된 한글도 시도
-			assembled := kc.assembleHangulSimple(korFromEng)
-			if assembled != korFromEng {
-				results = append(results, assembled)
-			}
+		korResult := kc.ConvertEngToKor(query)
+		if korResult != query {
+			results = append(results, korResult)
 		}
 	}
 
-	// 한글처럼 보이는 입력인 경우
 	if kc.containsHangul(query) {
-		// 한글 -> 영어 변환 시도
-		engFromKor := kc.ConvertKorToEng(query)
-		if engFromKor != query {
-			results = append(results, engFromKor)
+		engResult := kc.ConvertKorToEng(query)
+		if engResult != query {
+			results = append(results, engResult)
 		}
 	}
 
-	return results
+	return kc.removeDuplicates(results)
 }
 
 // looksLikeEnglishTyping - 영어 타자처럼 보이는지 확인
@@ -137,13 +233,11 @@ func (kc *KeyboardConverter) looksLikeEnglishTyping(s string) bool {
 		}
 		totalCount++
 
-		// 영어 키보드 레이아웃에 있는 문자들
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
 			englishCount++
 		}
 	}
 
-	// 70% 이상이 영어 문자면 영어 타자로 판단
 	return totalCount > 0 && float64(englishCount)/float64(totalCount) >= 0.7
 }
 
@@ -157,102 +251,17 @@ func (kc *KeyboardConverter) containsHangul(s string) bool {
 	return false
 }
 
-// assembleHangulSimple - 간단한 한글 조합 (초성+중성, 초성+중성+종성 기본 조합)
-func (kc *KeyboardConverter) assembleHangulSimple(jamos string) string {
-	var result strings.Builder
-	runes := []rune(jamos)
-	i := 0
+// removeDuplicates - 중복 제거
+func (kc *KeyboardConverter) removeDuplicates(slice []string) []string {
+	seen := make(map[string]bool)
+	result := []string{}
 
-	for i < len(runes) {
-		current := runes[i]
-
-		// 한글 자모인지 확인
-		if kc.isChosung(current) && i+1 < len(runes) && kc.isJungsung(runes[i+1]) {
-			chosung := current
-			jungsung := runes[i+1]
-
-			// 기본 한글 음절 생성
-			chosungIdx := -1
-			for idx, ch := range chosungList {
-				if ch == string(chosung) {
-					chosungIdx = idx
-					break
-				}
-			}
-
-			jungsungIdx := -1
-			for idx, jung := range jungsungList {
-				if jung == string(jungsung) {
-					jungsungIdx = idx
-					break
-				}
-			}
-
-			if chosungIdx != -1 && jungsungIdx != -1 {
-				// 종성이 있는지 확인
-				if i+2 < len(runes) && kc.isJongsung(runes[i+2]) {
-					jongsung := runes[i+2]
-					jongsungIdx := -1
-					for idx, jong := range jongsungList {
-						if jong == string(jongsung) {
-							jongsungIdx = idx
-							break
-						}
-					}
-
-					if jongsungIdx != -1 {
-						// 초성+중성+종성
-						hangul := rune(hangulBase +
-							chosungIdx*jungsungCount*jongsungCount +
-							jungsungIdx*jongsungCount +
-							jongsungIdx)
-						result.WriteRune(hangul)
-						i += 3
-						continue
-					}
-				}
-
-				// 초성+중성만
-				hangul := rune(hangulBase +
-					chosungIdx*jungsungCount*jongsungCount +
-					jungsungIdx*jongsungCount)
-				result.WriteRune(hangul)
-				i += 2
-				continue
-			}
-		}
-
-		// 조합 불가능하면 그대로 출력
-		result.WriteRune(current)
-		i++
-	}
-
-	return result.String()
-}
-
-func (kc *KeyboardConverter) isChosung(r rune) bool {
-	for _, ch := range chosungList {
-		if ch == string(r) {
-			return true
+	for _, item := range slice {
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
 		}
 	}
-	return false
-}
 
-func (kc *KeyboardConverter) isJungsung(r rune) bool {
-	for _, jung := range jungsungList {
-		if jung == string(r) {
-			return true
-		}
-	}
-	return false
-}
-
-func (kc *KeyboardConverter) isJongsung(r rune) bool {
-	for _, jong := range jongsungList {
-		if jong == string(r) && jong != "" {
-			return true
-		}
-	}
-	return false
+	return result
 }
