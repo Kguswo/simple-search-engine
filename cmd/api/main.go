@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"simple-search-engine/internal/elasticsearch"
-	"simple-search-engine/internal/indexer"
 	"simple-search-engine/internal/models"
 	"simple-search-engine/internal/search"
 
 	"github.com/gin-gonic/gin"
 )
+
+const indexName = "tech_blogs"
 
 func main() {
 	log.Println("🚀 SmartSearch API 서버 시작...")
@@ -60,7 +61,7 @@ func main() {
 		log.Printf("🔍 검색 요청: %s", query)
 
 		// 검색 수행
-		results, err := searcher.Search(query, indexer.IndexName)
+		results, err := searcher.Search(query, indexName)
 		if err != nil {
 			log.Printf("❌ 검색 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -88,7 +89,7 @@ func main() {
 
 		log.Printf("🔍 Fuzzy 검색 요청: %s", query)
 
-		results, err := searcher.FuzzySearch(query, indexer.IndexName)
+		results, err := searcher.FuzzySearch(query, indexName)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "검색 중 오류가 발생했습니다",
@@ -120,33 +121,33 @@ func main() {
 		var searchMethod string
 
 		// 1단계: 기본 검색 시도
-		results, err := searcher.Search(query, indexer.IndexName)
+		results, err := searcher.Search(query, indexName)
 		if err == nil && len(results) > 0 {
 			correctedQuery = query
 			searchMethod = "기본 검색"
 			log.Printf("✅ 기본 검색 성공: %d개 결과", len(results))
 		} else {
 			// 2단계: 한영 변환 검색
-			results, correctedQuery, err = searcher.SearchWithKeyboardConversion(query, indexer.IndexName)
+			results, correctedQuery, err = searcher.SearchWithKeyboardConversion(query, indexName)
 			if err == nil && len(results) > 0 {
 				searchMethod = "한영 변환"
 				log.Printf("✅ 한영 변환 검색 성공: %s → %s", query, correctedQuery)
 			} else {
 				// 3단계: 초성 검색
-				results, err = searcher.SearchWithChosung(query, indexer.IndexName)
+				results, err = searcher.SearchWithChosung(query, indexName)
 				if err == nil && len(results) > 0 {
 					correctedQuery = query
 					searchMethod = "초성 검색"
 					log.Printf("✅ 초성 검색 성공: %d개 결과", len(results))
 				} else {
 					// 4단계: 오타 교정 검색
-					results, correctedQuery, err = searcher.SearchWithTypoCorrection(query, indexer.IndexName)
+					results, correctedQuery, err = searcher.SearchWithTypoCorrection(query, indexName)
 					if err == nil && len(results) > 0 {
 						searchMethod = "오타 교정"
 						log.Printf("✅ 오타 교정 검색 성공: %s → %s", query, correctedQuery)
 					} else {
 						// 5단계: Fuzzy 검색 (최후의 수단)
-						results, err = searcher.FuzzySearch(query, indexer.IndexName)
+						results, err = searcher.FuzzySearch(query, indexName)
 						correctedQuery = query
 						searchMethod = "유사 검색"
 						log.Printf("✅ Fuzzy 검색 시도")
@@ -177,7 +178,7 @@ func main() {
 		log.Printf("🔍 자동완성 요청: %s", query)
 
 		// 간단한 검색으로 결과 가져오기
-		results, err := searcher.Search(query, indexer.IndexName)
+		results, err := searcher.Search(query, indexName)
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"suggestions": []string{},
