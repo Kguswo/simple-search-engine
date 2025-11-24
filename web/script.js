@@ -88,27 +88,24 @@ function displayResults(results, query) {
         const resultItem = document.createElement('div');
         resultItem.className = 'result-item';
         
-        // 제목
+        // 제목 (클릭 가능한 링크)
         const title = document.createElement('div');
         title.className = 'result-title';
         const link = document.createElement('a');
         link.href = result.url;
         link.target = '_blank';
-        link.textContent = result.title; // textContent로 안전하게
+        link.textContent = result.title;
         title.appendChild(link);
+        resultItem.appendChild(title);
         
-        // URL
-        const meta = document.createElement('div');
-        meta.className = 'result-meta';
-        meta.textContent = result.url;
-        
-        // 내용
+        // 내용 (150자 제한)
         const content = document.createElement('div');
         content.className = 'result-content';
-        content.textContent = result.content || ''; // textContent로 안전하게
+        const contentText = result.content || '';
+        content.textContent = contentText.length > 150 
+            ? contentText.substring(0, 150) + '...' 
+            : contentText;
         
-        resultItem.appendChild(title);
-        resultItem.appendChild(meta);
         resultItem.appendChild(content);
         resultsDiv.appendChild(resultItem);
     });
@@ -174,12 +171,12 @@ function displayAutocomplete(suggestions, query) {
     autocompleteDiv.innerHTML = suggestions.map(suggestion => {
         // 검색어 하이라이트
         const highlighted = suggestion.replace(
-            new RegExp(query, 'gi'), 
+            new RegExp(escapeRegex(query), 'gi'), 
             match => `<strong>${match}</strong>`
         );
         
         return `
-            <div class="autocomplete-item" data-value="${suggestion}">
+            <div class="autocomplete-item" data-value="${escapeHtml(suggestion)}">
                 ${highlighted}
             </div>
         `;
@@ -203,3 +200,15 @@ document.addEventListener('click', (e) => {
         autocompleteDiv.classList.remove('show');
     }
 });
+
+// HTML 이스케이프
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 정규식 이스케이프
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
